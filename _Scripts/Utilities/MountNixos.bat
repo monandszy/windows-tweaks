@@ -1,0 +1,1 @@
+net use X: \\sshfs.r\root@nixos

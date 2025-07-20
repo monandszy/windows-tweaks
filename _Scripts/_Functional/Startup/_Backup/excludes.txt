@@ -1,0 +1,56 @@
+      
+# This is a comment. Lines starting with # are ignored.
+# This file tells restic what files and directories to exclude from the backup.
+
+# General log files (match any file ending in .log)
+*.log
+*.logs
+
+# Temporary and cache files
+*.tmp
+*.temp
+*.swp
+*~
+*.bak
+*.bkp
+
+# OS-specific metadata files
+.DS_Store
+Thumbs.db
+
+# --- Developer & Build Artifacts ---
+
+# Python cache and virtual environments
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node.js dependencies
+node_modules/
+
+# General build output directories
+build/
+dist/
+bin/
+obj/
+out/
+
+# IDE-specific folders
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# --- Specific Directories to Ignore ---
+# You can add full paths to directories you want to skip.
+# Note: These paths are relative to the backup source.
+# For example, if you back up C:\Users\YourUser, this will ignore C:\Users\YourUser\Downloads
+Downloads/
+"VirtualBox VMs/"
+Microsoft/
+Temp/
+Packages/
+ConnectedDevicesPlatform/
+
+    

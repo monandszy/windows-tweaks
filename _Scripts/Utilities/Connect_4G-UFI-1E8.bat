@@ -1,0 +1,1 @@
+netsh wlan connect 4G-UFI-1E8

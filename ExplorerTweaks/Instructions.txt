@@ -1,0 +1,2 @@
+Repeat delay, coursor blink
+"Start" > "Control Panel" > "Keyboard". 

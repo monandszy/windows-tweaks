@@ -1,0 +1,1 @@
+@FOR /f "tokens=1,* delims==" %i IN ('docker-machine env box ^| findstr "SET"') DO @FOR /f "tokens=2" %k IN ("%i") DO @setx /M %k %j

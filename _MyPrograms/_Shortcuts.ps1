@@ -1,56 +1,51 @@
+
 <#
 .SYNOPSIS
-Creates shortcuts for applications in the Windows user's Start Menu and Startup folders
-based on predefined lists of relative paths, supporting exact file paths and
-wildcard directory scans.
+Creates shortcuts for applications in the Windows user's Start Menu and Startup folders.
+It also automatically creates shortcuts to the parent folders of those applications.
 
 .DESCRIPTION
-This script automates the creation of .lnk shortcuts.
-Target executables are defined by two internalt arrays relative to a $RootDirectory:
-1. $PredefinedRelativeExePaths: For shortcuts placed only in the Start Menu Programs folder.
-2. $StartupRelativeExePaths: For shortcuts placed in BOTH the Start Menu Programs folder
-   and the Startup folder.
+This script automates the creation of .lnk shortcuts. Targets are defined by two internal arrays relative to a $RootDirectory:
+1. $PredefinedRelativeExePaths: For application shortcuts placed only in the Start Menu Programs folder.
+2. $StartupRelativeExePaths: For application shortcuts placed in BOTH the Start Menu Programs folder and the Startup folder.
 
-For entries in both lists, the script supports two types:
+For the application lists, the script supports two types:
 1. Exact Relative File Paths (e.g., "FolderA\App.exe"):
    - Creates a shortcut directly in the target folder (Start Menu Programs root, Startup root, or both).
-2. Wildcard Directory Paths (e.g., "FolderB\*" or "*"):
-   - Scans the specified directory (e.g., `$RootDirectory\FolderB`) non-recursively for all .exe files.
+2. Wildcard Directory Paths (e.g., "FolderB\*"):
+   - Scans the specified directory non-recursively for all allowed file types (.exe, .bat, .cmd, .code-workspace).
    - Creates a new subfolder inside the target folder(s) named after the source directory (e.g., "FolderB").
-   - Places shortcuts for all found .exe files into this new subfolder within the target folder(s).
-   - For a wildcard entry of just "*", shortcuts are placed directly in the target folder(s) root.
+   - Places shortcuts for all found files into this new subfolder.
 
 General behavior:
-- Uses `$RootDirectory` (or current location) as the base for finding source executables.
-- Targets the current user's Start Menu Programs folder and/or Startup folder.
-- Shortcut name is `AppName.lnk` for `AppName.exe`.
-- Shortcut "Start in" is the exe's directory.
-- Uses WScript.Shell COM object.
-- Skips if a shortcut with the same name already exists in a specific target location.
-- Provides console output and a final summary.
+- Uses `$RootDirectory` (or current location) as the base for finding source files and folders.
+- For each unique program folder processed, it automatically creates a corresponding folder shortcut in the Start Menu Programs folder.
+- Skips creation if a shortcut with the same name already exists in the target location.
+- Provides console output and a final summary of actions taken.
 
 IMPORTANT: The `$PredefinedRelativeExePaths` and `$StartupRelativeExePaths` arrays MUST be edited by the user.
 
 .PARAMETER RootDirectory
-The root directory for resolving relative paths to source executables.
+The root directory for resolving relative paths to source executables and folders.
 Defaults to current location.
 
 .EXAMPLE
 PS C:> .\Create-AdvancedShortcuts.ps1
 
 (Assumes script is run from the desired RootDirectory and the arrays are configured)
-If `$PredefinedRelativeExePaths` contains:
-- "Utils\Tool.exe": Shortcut created in `C:\Users\CurrentUser\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Tool.lnk`
-- "Games\*": Scans `.\Games\` for exes. For `.\Games\Game1.exe`, shortcut is `C:\Users\CurrentUser\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Games\Game1.lnk`.
+If `$PredefinedRelativeExePaths` contains "Utils\Tool.exe", two shortcuts are created:
+- Application: `...\Start Menu\Programs\Tool.lnk`
+- Parent Folder: `...\Start Menu\Programs\Utils.lnk`
 
-If `$StartupRelativeExePaths` contains:
-- "Monitor.exe": Shortcut created in `...\Start Menu\Programs\Monitor.lnk` AND `C:\Users\CurrentUser\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\Monitor.lnk`.
-- "BackgroundTasks\*": Scans `.\BackgroundTasks\` for exes. For `.\BackgroundTasks\Task1.exe`, shortcuts are created in `...\Start Menu\Programs\BackgroundTasks\Task1.lnk` AND `...\Startup\BackgroundTasks\Task1.lnk`.
-
+If `$StartupRelativeExePaths` contains "BackgroundTasks\*":
+- For `.\BackgroundTasks\Task1.exe`, shortcuts are created in:
+  `...\Start Menu\Programs\BackgroundTasks\Task1.lnk`
+  `...\Startup\BackgroundTasks\Task1.lnk`
+- And a single folder shortcut is also created: `...\Start Menu\Programs\BackgroundTasks.lnk`
 
 .NOTES
 Prerequisites: PowerShell, WScript.Shell COM object.
-Configuration: Edit `$PredefinedRelativeExePaths` and `$StartupRelativeExePaths` arrays.
+Configuration: Edit the `$PredefinedRelativeExePaths` and `$StartupRelativeExePaths` arrays.
 Permissions: Required to create files and directories in the user's Start Menu and Startup folders.
 #>
 [CmdletBinding()]
@@ -76,6 +71,8 @@ $PredefinedRelativeExePaths = @(
     "Portable\Inkscape\bin\inkscape.exe",
     "Portable\KDEconnect\bin\kdeconnect-app.exe",
     "Portable\LibreWolf Portable\LibreWolf-Portable.exe",
+    "Portable\LibreWolf Portable\LibreWolfSocials.bat",
+    "Portable\LibreWolf Portable\LibreWolfWork.bat",
     "Portable\Okular\bin\okular.exe",
     "Portable\olive-editor\olive-editor.exe",
     "Portable\PaintDotNet\PaintDotNetPortable.exe",
@@ -83,7 +80,7 @@ $PredefinedRelativeExePaths = @(
     "Portable\qimgv-video\qimgv.exe",
     "Portable\SysInternals All\*", # Example wildcard entry
     "Portable\Vial\Vial.exe",
-    "Portable\ungoogled-chromium-portable\ungoogled-chromium-portable.exe"
+    "Portable\ungoogled-chromium-portable\chrome.exe",
     "Portable\Vivaldi\vivaldi.bat",
     "Programing\vscodium-portable\VSCodium.exe",
     "Programing\NetworkMiner_2-9\NetworkMiner.exe",
@@ -92,7 +89,6 @@ $PredefinedRelativeExePaths = @(
     "WindowsManagement\ClickMonitorDDC_7_2\ClickMonitorDDC_7_2.exe",
     "WindowsManagement\Default Programs Editor\Default Programs Editor.exe",
     "WindowsManagement\Dimmer\Dimmer.exe",
-    "WindowsManagement\DiscordChatExporter\DiscordChatExporter.exe",
     "WindowsManagement\hwmonitor\HWMonitor_x64.exe",
     "WindowsManagement\MajorGeeks Windows Tweaks\MajorGeeks Windows Tweaks.exe",
     "WindowsManagement\shexview\shexview.exe",
@@ -107,12 +103,20 @@ $PredefinedRelativeExePaths = @(
     "WindowsManagement\ExeInstall\*",
     "Programing\Nvim\nvim.cmd",
     "Portable\LibreOfficePortable\*",
-    "Programing\win-vind\win-vind.exe"
+    "Programing\win-vind\win-vind.exe",
+    "Programing\intellij-idea-ultima\intellij-idea-ultimate-portable.exe",
+    "Programing\workspaces\*",
+    "Programing\android-studio-portable\android-studio-portable.exe",
+    "Development\podman-desktop\podman-desktop.exe",
+    "WindowsManagement\ventoy\*"
 )
+
+# Define the list of extensions to look for
+$AllowedExtensions = @("*.exe", "*.bat", "*.cmd", "*.code-workspace")
 
 # These will be added to the User's Start Menu -> Programs folder AND the Startup folder
 $StartupRelativeExePaths = @(
- "Portable\FlowLauncher\Flow.Launcher.exe"
+ "Portable\FlowLauncher\Flow.Launcher.exe",
  "Portable\Rainmeter\Rainmeter.exe",
  "Portable\ShareX\ShareX.exe",
  "Portable\Simplewall\simplewall.exe"
@@ -151,27 +155,25 @@ Write-Host "----------------------------------------"
 $createdCount = 0
 $skippedCount = 0
 $errorCount = 0
+# List to track folders for which shortcuts have already been created, to avoid duplicates
+$processedFolderPaths = [System.Collections.Generic.List[string]]::new()
 
-#region Helper Function for Creating Shortcuts
+
+#region Helper Functions for Creating Shortcuts
 
 function Create-AppShortcut {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)]
         [System.IO.FileInfo]$ExeFileInfo,
-
         [Parameter(Mandatory=$true)]
         [string]$TargetFolderPath,
-
         [Parameter(Mandatory=$true)]
         [__ComObject]$ShellObject, # Type specific to WScript.Shell
-
         [Parameter(Mandatory=$true)]
         [ref]$CreatedCounter,
-
         [Parameter(Mandatory=$true)]
         [ref]$SkippedCounter,
-
         [Parameter(Mandatory=$true)]
         [ref]$ErrorCounter
     )
@@ -215,6 +217,45 @@ function Create-AppShortcut {
     }
 }
 
+function Create-FolderShortcut {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [System.IO.DirectoryInfo]$FolderInfo,
+        [Parameter(Mandatory=$true)]
+        [string]$ProgramsFolderPath,
+        [Parameter(Mandatory=$true)]
+        [__ComObject]$ShellObject,
+        [Parameter(Mandatory=$true)]
+        [ref]$CreatedCounter,
+        [Parameter(Mandatory=$true)]
+        [ref]$SkippedCounter,
+        [Parameter(Mandatory=$true)]
+        [ref]$ErrorCounter
+    )
+    try {
+        $shortcutName = "$($FolderInfo.Name).lnk"
+        $shortcutPath = Join-Path -Path $ProgramsFolderPath -ChildPath $shortcutName
+
+        if (Test-Path $shortcutPath) {
+            Write-Warning "  Folder shortcut '$shortcutName' already exists in '$ProgramsFolderPath'. Skipping."
+            $SkippedCounter.Value++
+            return
+        }
+
+        $shortcut = $ShellObject.CreateShortcut($shortcutPath)
+        $shortcut.TargetPath = $FolderInfo.FullName
+        $shortcut.WorkingDirectory = $FolderInfo.FullName
+        $shortcut.Save()
+        Write-Host "  Created folder shortcut: '$shortcutName' in '$ProgramsFolderPath'"
+        $CreatedCounter.Value++
+    }
+    catch {
+        Write-Error "  Failed to create folder shortcut for '$($FolderInfo.FullName)'. Error: $($_.Exception.Message)"
+        $ErrorCounter.Value++
+    }
+}
+
 #endregion
 
 #region Process PredefinedRelativeExePaths (Start Menu Only)
@@ -240,24 +281,34 @@ foreach ($entryPath in $PredefinedRelativeExePaths) {
         # Determine name for the subfolder in Start Menu (name of the source folder)
         # Special case: "*" should not create a subfolder named after RootDirectory
         if ($sourceDirRelativePath -eq "" -or $sourceDirRelativePath -eq ".") {
-             $startMenuTargetSubFolderPath = $startMenuProgramsPath
-             Write-Host "  Targeting Start Menu root folder for wildcard entry '*'"
+            $startMenuTargetSubFolderPath = $startMenuProgramsPath
+            Write-Host "  Targeting Start Menu root folder for wildcard entry '*'"
         } else {
             $sourceFolderName = Split-Path -Leaf $fullSourceDirPath
             $startMenuTargetSubFolderPath = Join-Path -Path $startMenuProgramsPath -ChildPath $sourceFolderName
             Write-Host "  Targeting Start Menu subfolder: '$startMenuTargetSubFolderPath'"
         }
 
-        $exeFilesInSourceDir = Get-ChildItem -Path $fullSourceDirPath -Filter "*.exe" -File -Depth 0 -ErrorAction SilentlyContinue
+        # Use -Include to find all files matching the extensions in $AllowedExtensions
+        $exeFilesInSourceDir = Get-ChildItem -Path $fullSourceDirPath -Include $AllowedExtensions -File -Depth 0 -ErrorAction SilentlyContinue
 
         if ($null -eq $exeFilesInSourceDir -or $exeFilesInSourceDir.Count -eq 0) {
-            Write-Host "  No .exe files found in '$fullSourceDirPath'."
+            Write-Host "  No files with allowed extensions found in '$fullSourceDirPath'."
             continue
         }
 
-        Write-Host "  Found $($exeFilesInSourceDir.Count) .exe file(s) in '$fullSourceDirPath'."
+        Write-Host "  Found $($exeFilesInSourceDir.Count) matching file(s) in '$fullSourceDirPath'."
+
         foreach ($exeFileInstance in $exeFilesInSourceDir) {
             Create-AppShortcut -ExeFileInfo $exeFileInstance -TargetFolderPath $startMenuTargetSubFolderPath -ShellObject $shell -CreatedCounter ([ref]$createdCount) -SkippedCounter ([ref]$skippedCount) -ErrorCounter ([ref]$errorCount)
+        }
+        
+        # Automatically create a shortcut for the parent folder
+        $normalizedFullSourcePath = (Resolve-Path $fullSourceDirPath).Path.ToLower()
+        if (-not $processedFolderPaths.Contains($normalizedFullSourcePath)) {
+            Write-Host "  -> Creating parent folder shortcut for '$fullSourceDirPath'"
+            Create-FolderShortcut -FolderInfo (Get-Item $fullSourceDirPath) -ProgramsFolderPath $startMenuProgramsPath -ShellObject $shell -CreatedCounter ([ref]$createdCount) -SkippedCounter ([ref]$skippedCount) -ErrorCounter ([ref]$errorCount)
+            $processedFolderPaths.Add($normalizedFullSourcePath)
         }
     }
     # --- HANDLE EXACT FILE PATHS ---
@@ -280,7 +331,15 @@ foreach ($entryPath in $PredefinedRelativeExePaths) {
             Write-Host "  Targeting Start Menu root folder for exact path."
 
             Create-AppShortcut -ExeFileInfo $exeFile -TargetFolderPath $startMenuTargetFolderPath -ShellObject $shell -CreatedCounter ([ref]$createdCount) -SkippedCounter ([ref]$skippedCount) -ErrorCounter ([ref]$errorCount)
-
+            
+            # Automatically create a shortcut for the parent folder
+            $parentDirInfo = $exeFile.Directory
+            $normalizedParentPath = $parentDirInfo.FullName.ToLower()
+            if (-not $processedFolderPaths.Contains($normalizedParentPath)) {
+                Write-Host "  -> Creating parent folder shortcut for '$($parentDirInfo.FullName)'"
+                Create-FolderShortcut -FolderInfo $parentDirInfo -ProgramsFolderPath $startMenuProgramsPath -ShellObject $shell -CreatedCounter ([ref]$createdCount) -SkippedCounter ([ref]$skippedCount) -ErrorCounter ([ref]$errorCount)
+                $processedFolderPaths.Add($normalizedParentPath)
+            }
         }
         catch {
             Write-Error "  Failed to resolve exact path '$normalizedEntryPath' (resolved to '$fullExePath'). Error: $($_.Exception.Message)"
@@ -340,6 +399,14 @@ foreach ($entryPath in $StartupRelativeExePaths) {
             # Create in Startup
             Create-AppShortcut -ExeFileInfo $exeFileInstance -TargetFolderPath $startupTargetSubFolderPath -ShellObject $shell -CreatedCounter ([ref]$createdCount) -SkippedCounter ([ref]$skippedCount) -ErrorCounter ([ref]$errorCount)
         }
+        
+        # Automatically create a shortcut for the parent folder (in Start Menu only)
+        $normalizedFullSourcePath = (Resolve-Path $fullSourceDirPath).Path.ToLower()
+        if (-not $processedFolderPaths.Contains($normalizedFullSourcePath)) {
+            Write-Host "  -> Creating parent folder shortcut for '$fullSourceDirPath' (Start Menu only)"
+            Create-FolderShortcut -FolderInfo (Get-Item $fullSourceDirPath) -ProgramsFolderPath $startMenuProgramsPath -ShellObject $shell -CreatedCounter ([ref]$createdCount) -SkippedCounter ([ref]$skippedCount) -ErrorCounter ([ref]$errorCount)
+            $processedFolderPaths.Add($normalizedFullSourcePath)
+        }
     }
     # --- HANDLE EXACT FILE PATHS ---
     else {
@@ -366,7 +433,15 @@ foreach ($entryPath in $StartupRelativeExePaths) {
 
             # Create in Startup
             Create-AppShortcut -ExeFileInfo $exeFile -TargetFolderPath $startupTargetFolderPath -ShellObject $shell -CreatedCounter ([ref]$createdCount) -SkippedCounter ([ref]$skippedCount) -ErrorCounter ([ref]$errorCount)
-
+            
+            # Automatically create a shortcut for the parent folder (in Start Menu only)
+            $parentDirInfo = $exeFile.Directory
+            $normalizedParentPath = $parentDirInfo.FullName.ToLower()
+            if (-not $processedFolderPaths.Contains($normalizedParentPath)) {
+                Write-Host "  -> Creating parent folder shortcut for '$($parentDirInfo.FullName)' (Start Menu only)"
+                Create-FolderShortcut -FolderInfo $parentDirInfo -ProgramsFolderPath $startMenuProgramsPath -ShellObject $shell -CreatedCounter ([ref]$createdCount) -SkippedCounter ([ref]$skippedCount) -ErrorCounter ([ref]$errorCount)
+                $processedFolderPaths.Add($normalizedParentPath)
+            }
         }
         catch {
             Write-Error "  Failed to resolve exact path '$normalizedEntryPath' (resolved to '$fullExePath'). Error: $($_.Exception.Message)"

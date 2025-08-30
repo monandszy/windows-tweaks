@@ -51,8 +51,13 @@ $RelativeFolders = @(
     "Development\Java\jdk-21\bin",
     "Development\ffmpeg\bin",
     "Programing\Nvim",
-    "Programing\win-vind"
-    
+    "Programing\win-vind",
+    "Development\msys\ucrt64\bin",
+    "Development\msys",
+    "Programing\android-studio-portable\app\bin",
+    "Programing\android-studio-portable\data\sdk",
+    "Programing\android-studio-portable\data\sdk\cmdline-tools\latest\bin",
+    "Development\docker-toolbox\app"
 )
 # Example: $RelativeFolders = @("bin", "executables", "resources/cli")
 

@@ -250,3 +250,4 @@ if ($shell) {
 Write-Host "Check your shortcuts in:"
 Write-Host "  Start Menu Programs\_Functional: '$startMenuProgramsPath\_Functional'"
 Write-Host "  Start Menu Startup           : '$startMenuStartupPath'"
+pause

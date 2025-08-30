@@ -30,27 +30,27 @@
 
 	// Terminals - appear when a folder is selected or in an empty space
 	item(
-		type='dir|back.dir'
+		type='dir|back.dir|desktop'
 		title='Open in cmd (Admin)'
 		admin=true
 		cmd='cmd.exe'
 		args='/K TITLE Command Prompt & PUSHD ""@sel.path""'
 	)
 	item(
-		type='dir|back.dir'
+		type='dir|back.dir|desktop'
 		title='Git Bash Here'
 		cmd='%USERPROFILE%\_MyPrograms\Development\PortableGit\git-bash.exe'
 		args='"@sel.path"' // Sets the starting directory for the new process
 	)
 	item(
-		type='dir|back.dir'
+		type='dir|back.dir|desktop'
 		title='Git CMD Here'
 		cmd='%USERPROFILE%\_MyPrograms\Development\PortableGit\git-cmd.exe'
 		args='"@sel.path"' // Sets the starting directory
 	)
 }
 
-menu(
+/* menu(
 	mode="multiple" 
 	title='Edit or View' pos=1
 	type='file'
@@ -128,4 +128,4 @@ menu(
 	 cmd='%USERPROFILE%\_MyPrograms\Portable\LibreWolf Portable\LibreWolf-Portable.exe'
 	 args='"@sel.path"'
 	 )
-}
+} */

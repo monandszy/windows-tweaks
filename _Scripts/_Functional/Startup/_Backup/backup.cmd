@@ -56,6 +56,11 @@ echo [STEP 1/2] Starting backup...
 
 echo.
 echo [STEP 2/2] Pruning old backups to save space...
+
+.\restic.exe unlock ^
+    --repo "%REPO_PATH%" ^
+    --password-file "%PASSWORD_FILE%" ^
+
 :: This policy keeps the last 7 daily, 4 weekly, and 12 monthly snapshots.
 .\restic.exe forget ^
     --repo "%REPO_PATH%" ^

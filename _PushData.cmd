@@ -5,8 +5,3 @@ robocopy ".\redshift" "%USERPROFILE%\_MyPrograms\WindowsManagement\redshift" /E
 robocopy ".\WindowsTheme" "%USERPROFILE%\AppData\Local\Microsoft\Windows\Themes" /E
 robocopy ".\winaerotweaker" "%USERPROFILE%\_MyPrograms\WindowsManagement\winaerotweaker" /E
 copy ".\_MyPrograms\*" "%USERPROFILE%\_MyPrograms"
-
-
-
-
-

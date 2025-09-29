@@ -1,3 +1,3 @@
 docker-machine start box
-docker-machine ps
+docker-machine ls
 docker info

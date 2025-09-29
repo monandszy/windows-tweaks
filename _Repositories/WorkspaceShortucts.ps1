@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     Scans its local directory for folders and automates the creation of Windows shortcuts,
-    Visual Studio Code workspaces, and command prompt shortcuts for them.
+    Visual Studio Code workspaces, and batch scripts for them.
 
 .DESCRIPTION
     This script is designed to be placed in a root directory containing multiple project folders.
@@ -18,8 +18,8 @@
     4.  Creates a shortcut to the .code-workspace file in the Start Menu, allowing the folder
         to be launched directly in VS Code.
     
-    5.  Creates a shortcut that opens the Command Prompt (cmd.exe) directly in the project
-        folder's directory, named '[FolderName] (CMD).lnk'.
+    5.  Creates a batch script (.bat) that opens the Command Prompt directly in the project
+        folder's directory, named '[FolderName] (CMD).bat'. These are stored in a '.cmd' subfolder.
 
     The script is idempotent, meaning it will skip any items that already exist.
 
@@ -28,10 +28,10 @@
 
     Assuming C:\MyProjects contains a folder 'ProjectA':
     - Creates 'C:\MyProjects\.workspaces\ProjectA.code-workspace'
+    - Creates 'C:\MyProjects\.cmd\ProjectA (CMD).bat'
     - Creates the following shortcuts in your Start Menu Programs folder:
         - 'ProjectA.lnk' (opens the folder in File Explorer)
         - 'ProjectA.code-workspace.lnk' (opens the folder in VS Code)
-        - 'ProjectA (CMD).lnk' (opens Command Prompt in the ProjectA folder)
 
 .NOTES
     - Prerequisites: PowerShell, WScript.Shell COM object (standard on Windows).
@@ -42,6 +42,7 @@ param()
 
 # --- SCRIPT CONFIGURATION ---
 $WorkspacesFolderName = ".workspaces"
+$CmdScriptsFolderName = ".cmd"
 
 # --- INITIALIZATION ---
 try {
@@ -55,11 +56,18 @@ try {
     # Define key paths
     $startMenuPath = [Environment]::GetFolderPath("Programs")
     $workspacesPath = Join-Path -Path $ScriptRoot -ChildPath $WorkspacesFolderName
+    $cmdScriptsPath = Join-Path -Path $ScriptRoot -ChildPath $CmdScriptsFolderName
 
     # Create the .workspaces directory if it doesn't exist
     if (-not (Test-Path $workspacesPath)) {
         Write-Host "Creating workspaces storage folder: '$workspacesPath'"
         New-Item -Path $workspacesPath -ItemType Directory -Force | Out-Null
+    }
+    
+    # Create the .cmd directory if it doesn't exist
+    if (-not (Test-Path $cmdScriptsPath)) {
+        Write-Host "Creating CMD scripts folder: '$cmdScriptsPath'"
+        New-Item -Path $cmdScriptsPath -ItemType Directory -Force | Out-Null
     }
 
     # Create the COM object needed for creating shortcuts
@@ -112,39 +120,42 @@ function Create-Shortcut {
     }
 }
 
-function Create-CmdShortcut {
+function Create-CmdBatScript {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [System.IO.DirectoryInfo]$TargetFolder,
         [Parameter(Mandatory = $true)]
-        [string]$ShortcutDestinationFolder
+        [string]$BatScriptDestinationFolder
     )
     
     try {
-        $shortcutName = "$($TargetFolder.Name) (CMD).lnk"
-        $shortcutPath = Join-Path -Path $ShortcutDestinationFolder -ChildPath $shortcutName
+        $batFileName = "$($TargetFolder.Name) (CMD).bat"
+        $batFilePath = Join-Path -Path $BatScriptDestinationFolder -ChildPath $batFileName
         
-        if (Test-Path $shortcutPath) {
-            Write-Warning "  -> CMD Shortcut '$shortcutName' already exists. Skipping."
+        if (Test-Path $batFilePath) {
+            Write-Warning "  -> Batch file '$batFileName' already exists. Skipping."
             $script:skippedCount++
             return
         }
 
-        # $env:ComSpec is the reliable environment variable for the path to cmd.exe
-        $cmdPath = $env:ComSpec
+        # Content for the .bat file
+        # @echo off            - Prevents commands from being displayed
+        # cd /d "..."          - Changes directory to the target folder
+        # cmd.exe /k           - Starts a new CMD instance and keeps it open
+        $batContent = @"
+@echo off
+cd /d "$($TargetFolder.FullName)"
+cmd.exe /k
+"@
 
-        $shortcut = $shell.CreateShortcut($shortcutPath)
-        $shortcut.TargetPath = $cmdPath
-        $shortcut.WorkingDirectory = $TargetFolder.FullName
-        $shortcut.IconLocation = "$cmdPath,0"
-        $shortcut.Save()
+        Set-Content -Path $batFilePath -Value $batContent
         
-        Write-Host "  -> Created CMD shortcut: '$shortcutName'"
+        Write-Host "  -> Created CMD batch file: '$batFileName'"
         $script:createdCount++
     }
     catch {
-        Write-Error "  -> Failed to create CMD shortcut for '$($TargetFolder.FullName)'. Error: $($_.Exception.Message)"
+        Write-Error "  -> Failed to create CMD batch file for '$($TargetFolder.FullName)'. Error: $($_.Exception.Message)"
         $script:errorCount++
     }
 }
@@ -152,8 +163,8 @@ function Create-CmdShortcut {
 
 # --- MAIN PROCESSING LOGIC ---
 
-# Get all directories in the script's root, excluding the workspaces folder itself
-$projectFolders = Get-ChildItem -Path $ScriptRoot -Directory -Exclude $WorkspacesFolderName
+# Get all directories in the script's root, excluding special folders
+$projectFolders = Get-ChildItem -Path $ScriptRoot -Directory -Exclude $WorkspacesFolderName, $CmdScriptsFolderName
 
 if ($projectFolders.Count -eq 0) {
     Write-Warning "No project folders found in '$ScriptRoot'. Nothing to do."
@@ -165,8 +176,8 @@ foreach ($folder in $projectFolders) {
     # --- Task 1: Create a standard shortcut TO the folder ---
     Create-Shortcut -SourceItem $folder -ShortcutDestinationFolder $startMenuPath
 
-    # --- Task 2: Create a shortcut to open CMD in the folder ---
-    Create-CmdShortcut -TargetFolder $folder -ShortcutDestinationFolder $startMenuPath
+    # --- Task 2: Create a batch script to open CMD in the folder ---
+    Create-CmdBatScript -TargetFolder $folder -BatScriptDestinationFolder $cmdScriptsPath
 
     # --- Task 3: Generate the .code-workspace file ---
     $workspaceFilePath = Join-Path -Path $workspacesPath -ChildPath "$($folder.Name).code-workspace"

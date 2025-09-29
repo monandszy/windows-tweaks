@@ -57,7 +57,10 @@ $RelativeFolders = @(
     "Programing\android-studio-portable\app\bin",
     "Programing\android-studio-portable\data\sdk",
     "Programing\android-studio-portable\data\sdk\cmdline-tools\latest\bin",
-    "Development\docker-toolbox\app"
+    "Development\docker-toolbox\app",
+    "Development\android\apktool",
+    "Development\Python\Scripts",
+    "Development\Graphviz\bin"
 )
 # Example: $RelativeFolders = @("bin", "executables", "resources/cli")
 

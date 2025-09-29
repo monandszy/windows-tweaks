@@ -58,6 +58,7 @@ param(
 # --- DEFINE YOUR RELATIVE EXE PATHS HERE ---
 # These will be added to the User's Start Menu -> Programs folder
 $PredefinedRelativeExePaths = @(
+    "Development\ADB_Explorer\ADB Explorer.exe"
     "Development\PortableGit\git-bash.exe",
     "Development\PortableGit\git-cmd.exe",
     "Development\android\Universal Android Debloater.exe",
@@ -108,7 +109,8 @@ $PredefinedRelativeExePaths = @(
     "Programing\workspaces\*",
     "Programing\android-studio-portable\android-studio-portable.exe",
     "Development\podman-desktop\podman-desktop.exe",
-    "WindowsManagement\ventoy\*"
+    "WindowsManagement\ventoy\*",
+    "Development\android\jadx-gui\jadx-gui-1.5.2.exe"
 )
 
 # Define the list of extensions to look for
@@ -119,7 +121,8 @@ $StartupRelativeExePaths = @(
  "Portable\FlowLauncher\Flow.Launcher.exe",
  "Portable\Rainmeter\Rainmeter.exe",
  "Portable\ShareX\ShareX.exe",
- "Portable\Simplewall\simplewall.exe"
+ "Portable\Simplewall\simplewall.exe",
+ "Portable\CalendarTask\desktopcal.exe"
 )
 # --- END OF PREDEFINED PATHS ---
 

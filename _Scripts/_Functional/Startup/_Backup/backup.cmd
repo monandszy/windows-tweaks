@@ -6,13 +6,7 @@
 :: Add the subdirectories you want to back up here, separated by spaces.
 :: This is now portable across different Windows machines and users!
 set BACKUP_SOURCES=^
-    "%USERPROFILE%\Documents" ^
-    "%USERPROFILE%\Desktop" ^
-    "%USERPROFILE%\_My" ^
-    "%USERPROFILE%\_MyPrograms" ^
-    "%USERPROFILE%\AppData" ^
-    "%USERPROFILE%\.ssh" ^
-    "%USERPROFILE%\VirtualBox VMs" ^
+    "%USERPROFILE%"
 
 :: --- SCRIPT ---
 
